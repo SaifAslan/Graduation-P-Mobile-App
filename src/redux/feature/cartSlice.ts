@@ -77,8 +77,8 @@ export const cartSlice = createSlice({
       let productId = action.payload.productId;
       let size = action.payload.size;
 
-      newState.items = state.items.filter(
-        item => item.product.id === productId && item.size === size,
+      newState.items = state.items.filter(item =>
+        item.product.id === productId && item.size === size ? false : true,
       );
       return newState;
     },

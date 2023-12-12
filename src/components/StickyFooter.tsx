@@ -1,9 +1,21 @@
 import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+  Home: undefined;
+  Profile: undefined;
+  Favourites: undefined;
+  Search:undefined;
+};
+
+type ProfileProps = NativeStackNavigationProp<RootStackParamList, 'Favourites'>;
 
 export default function StickyFooter() {
-  const navigation = useNavigation();
+  
+  const navigation = useNavigation<ProfileProps>();
+  //@ts-ignore
   const handleNavigation = (page: string) => navigation.navigate(page);
 
   return (

@@ -10,10 +10,14 @@
     "test": "jest"
   },
   "dependencies": {
+    "@ant-design/icons-react-native": "^2.3.2",
+    "@ant-design/react-native": "^5.0.5",
     "@react-native-async-storage/async-storage": "^1.21.0",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "@reduxjs/toolkit": "^2.0.1",
+    "@stripe/stripe-react-native": "^0.35.0",
+    "@types/mongodb": "^4.0.7",
     "axios": "^1.6.2",
     "react": "18.2.0",
     "react-dotenv": "^0.1.3",

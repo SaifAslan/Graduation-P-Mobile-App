@@ -13,6 +13,7 @@ import axios from 'axios';
 import {mainServiceURL} from '../utils/constants';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {IProduct} from '../interfaces/product';
+import Spacer from './Spacer';
 
 type RootStackParamList = {
   Product: {product: IProduct};
@@ -75,7 +76,7 @@ export default function SuggestedProduct({productId}: {productId: number}) {
         })}
       </View>
     </View>
-    <View style={styles.spacer}></View>
+    <Spacer />
     </View>
   );
 }
@@ -97,9 +98,7 @@ const styles = StyleSheet.create({
   leftProductsContainer: {
     flex: 1,
   },
-  spacer:{
-    height: 90
-  },
+
   sectionTitle:{
     color:"rgba(0,0,0,0.6)",
     fontSize:20,

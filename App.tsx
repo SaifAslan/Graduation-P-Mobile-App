@@ -30,6 +30,9 @@ import StickyFooter from './src/components/StickyFooter';
 import Cart from './src/pages/Cart';
 import Favourites from './src/pages/Favourites';
 import Profile from './src/pages/Profile';
+import Checkout from './src/pages/Checkout';
+import Login from './src/pages/Login';
+import Register from './src/pages/Register';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -55,6 +58,10 @@ function App(): JSX.Element {
             <Stack.Screen name="Cart" component={Cart} />
             <Stack.Screen name="Favourites" component={Favourites} />
             <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="Checkout" component={Checkout} />
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Register" component={Register} />
+
           </Stack.Navigator>
           <StickyFooter />
         </NavigationContainer>

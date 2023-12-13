@@ -41,16 +41,10 @@ export default function AddressForm({TitleText, clb}: IProps) {
           ...address,
         })
         .then(response => {
-          Toast.success({
-            content: response.message,
-            duration: 3,
-            stackable: true,
-          });
           clb(response.data.address);
         })
         .catch(error => {
           console.log({error});
-          Toast.fail({content: {error}, duration: 3, stackable: true});
         });
     } else {
       Alert.alert('Please fill all required fields!');

@@ -5,9 +5,10 @@ import { calcTotal } from '../utils/helpers';
 
 export default function OrderSummary() {
     const cart = useAppSelector(state => state.cart);
-    const subTotal = calcTotal(cart).toFixed(2);
-    const vat = (+subTotal * 0.2).toFixed(2);
-    const total = (+subTotal + +vat).toFixed(2);
+    const total = calcTotal(cart).toFixed(2)
+    const vat = (+total * 0.2).toFixed(2);
+    const subTotal = (+total - +vat).toFixed(2);
+    
   return (
     <View style={styles.totalsContainer}>
         <View style={styles.totalsInnerContainer}>

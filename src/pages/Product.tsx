@@ -25,11 +25,7 @@ export default function Product({route}: IProps) {
   const [productCountInCart, setProductCountInCart] = useState<number>(0);
 
   const cart = useAppSelector(state => state.cart);
-  const userInfo = useAppSelector(state => state.userInfo);
-
   const dispatch = useAppDispatch();
-
-  console.log(userInfo);
 
   useEffect(() => {
     let tempSizes = sizes.replace('Size:', '').split(',');

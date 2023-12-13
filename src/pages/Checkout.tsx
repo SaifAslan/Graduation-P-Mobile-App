@@ -12,23 +12,103 @@ import React, {useEffect, useState} from 'react';
 import OrderSummary from '../components/OrderSummary';
 import AppButton from '../components/AppButton';
 import Spacer from '../components/Spacer';
-import {useAppSelector} from '../redux/hooks';
+import {useAppDispatch, useAppSelector} from '../redux/hooks';
 import {MAIN_GREY_COLOR, mainServiceURL} from '../utils/constants';
 import AddressForm from '../components/AddressForm';
 import {IAddressRequest} from '../interfaces/address';
 import axios from 'axios';
 import AddressCard from '../components/AddressCard';
 import {Button} from '@ant-design/react-native';
-import { StripeProvider } from '@stripe/stripe-react-native';
+import {StripeProvider, useStripe} from '@stripe/stripe-react-native';
 //@ts-ignore
 import {TEST_PUBLISHABLE_STRIPE_KEY} from '@env';
+import {useNavigation} from '@react-navigation/native';
+import {calcTotal} from '../utils/helpers';
+import {ObjectId} from 'mongodb';
+import {emptyCart} from '../redux/feature/cartSlice';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+  Profile: undefined;
+  Login: undefined;
+  Checkout: undefined;
+  Success: undefined;
+};
+
+type ProfileProps = NativeStackNavigationProp<RootStackParamList, 'Checkout'>;
 
 export default function Checkout() {
   const userInfo = useAppSelector(state => state.userInfo);
-  const [modalVisile, setModalVisible] = useState<boolean>(false);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [userAddresses, setUserAddresses] = useState<IAddressRequest[]>([]);
+  //@ts-ignore
   const [selectedAddress, setSelectedAddress] = useState<IAddressRequest>({});
   const [addressesModal, setAddressesModal] = useState<boolean>(false);
+  const [orderId, setOrderId] = useState<ObjectId>();
+  const cart = useAppSelector(state => state.cart);
+  const total = calcTotal(cart).toFixed(2);
+  const navigation = useNavigation<ProfileProps>();
+  const dispatch = useAppDispatch();
+  const {initPaymentSheet, presentPaymentSheet} = useStripe();
+  const [loading, setLoading] = useState(false);
+
+  const fetchPaymentSheetParams = async () => {
+    const response = await fetch(`http://localhost:8070/api/payment-sheet`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: total,
+        orderId: 0,
+        userId: userInfo._id,
+      }),
+    });
+    const {paymentIntent, ephemeralKey, customer} = await response.json();
+
+    return {
+      paymentIntent,
+      ephemeralKey,
+      customer,
+    };
+  };
+
+  const initializePaymentSheet = async () => {
+    // @ts-ignore
+    const {paymentIntent, ephemeralKey, customer, TEST_PUBLISHABLE_STRIPE_KEY} =
+      await fetchPaymentSheetParams();
+
+    const {error} = await initPaymentSheet({
+      merchantDisplayName: 'Leaf, Inc.',
+      customerId: customer,
+      customerEphemeralKeySecret: ephemeralKey,
+      paymentIntentClientSecret: paymentIntent,
+      // Set `allowsDelayedPaymentMethods` to true if your business can handle payment
+      //methods that complete payment after a delay, like SEPA Debit and Sofort.
+      allowsDelayedPaymentMethods: true,
+      defaultBillingDetails: {
+        name: 'Jane Doe',
+      },
+      returnURL: 'AwesomeProject://stripe-redirect',
+    });
+    if (!error) {
+      setLoading(true);
+    }
+  };
+
+  const openPaymentSheet = async () => {
+    // see below
+    const {error} = await presentPaymentSheet();
+    if (error) {
+      Alert.alert(`Error code: ${error.code}`, error.message);
+    } else {
+      updateOrderStatus();
+    }
+  };
+
+  useEffect(() => {
+    initializePaymentSheet();
+  }, []);
   const fetchAddresses = (address?: IAddressRequest): void => {
     axios
       .get(mainServiceURL() + '/api/getUserAddresses/' + userInfo._id)
@@ -50,6 +130,7 @@ export default function Checkout() {
   };
 
   useEffect(() => {
+    userInfo.accessToken == '' && navigation.navigate('Login');
     fetchAddresses();
   }, []);
 
@@ -73,12 +154,48 @@ export default function Checkout() {
       })
       .catch(err => {
         console.log({err});
+        // @ts-ignore
         Alert.alert('Error!', {error});
       });
   };
 
+  const createOrder = () => {
+    if (!orderId) {
+      axios
+        .post(mainServiceURL() + '/api/order/create', {
+          user: userInfo._id,
+          items: cart.items,
+          address: selectedAddress._id,
+          totalPrice: total,
+        })
+        .then(response => {
+          setOrderId(response.data.order._id);
+          openPaymentSheet();
+        })
+        .catch(err => {
+          console.log({err});
+        });
+    } else {
+      openPaymentSheet();
+    }
+  };
+
+  const updateOrderStatus = () => {
+    axios
+      .put(mainServiceURL() + '/api/order/updateOrderStatus/' + orderId, {
+        newStatus: 'Processing',
+      })
+      .then(response => {
+        dispatch(emptyCart());
+        navigation.navigate('Success');
+      })
+      .catch(err => {
+        console.log({err});
+      });
+  };
+
   return (
-    <StripeProvider  publishableKey={TEST_PUBLISHABLE_STRIPE_KEY}>
+    <StripeProvider publishableKey={TEST_PUBLISHABLE_STRIPE_KEY}>
       <View style={styles.container}>
         <View style={styles.addressConatiner}>
           <Text style={styles.addressSectionTitle}>Shiping Address</Text>
@@ -110,7 +227,7 @@ export default function Checkout() {
           ViewStyle={styles.btnView}
           PressableStyle={styles.btnPressable}
           onPress={() => {
-            //   navigation.navigate('Checkout');
+            createOrder();
           }}
           Content={<Text style={styles.btnText}>Proceed to payment</Text>}
         />
@@ -172,7 +289,7 @@ export default function Checkout() {
           key={1}
           transparent={true}
           animationType="slide"
-          visible={modalVisile}
+          visible={modalVisible}
           onTouchCancel={() => setModalVisible(false)}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>

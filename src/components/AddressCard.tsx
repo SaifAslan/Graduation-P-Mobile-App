@@ -1,10 +1,11 @@
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import {IAddressRequest} from '../interfaces/address';
 import {MAIN_GREY_COLOR} from '../utils/constants';
 
 interface IProps {
   address: IAddressRequest;
+  profile?: boolean;
   list: boolean;
   changeClb?: () => void;
   selectClb?: (address: IAddressRequest) => void;
@@ -16,6 +17,7 @@ export default function AddressCard({
   changeClb,
   selectClb,
   deleteClb,
+  profile,
 }: IProps) {
   const {title, city, state, street, country, postalCode} = address;
   return (
@@ -31,9 +33,11 @@ export default function AddressCard({
               <Text style={styles.deleteBtn}>Delete</Text>
             </Pressable>
             {/* @ts-ignore */}
-            <Pressable onPress={() => selectClb(address)}>
-              <Text style={styles.selectBtn}>Select</Text>
-            </Pressable>
+            {!profile && (
+              <Pressable onPress={() => selectClb(address)}>
+                <Text style={styles.selectBtn}>Select</Text>
+              </Pressable>
+            )}
           </View>
         ) : (
           <Pressable onPress={changeClb}>

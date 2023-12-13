@@ -1,24 +1,9 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import type {PropsWithChildren} from 'react';
-import {StyleSheet} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Linking, StyleSheet} from 'react-native';
 import {Provider} from 'react-redux';
 import { store} from './src/redux/store';
 import {PersistGate} from 'redux-persist/integration/react';
@@ -33,14 +18,51 @@ import Profile from './src/pages/Profile';
 import Checkout from './src/pages/Checkout';
 import Login from './src/pages/Login';
 import Register from './src/pages/Register';
+import { initPaymentSheet, useStripe } from '@stripe/stripe-react-native';
+import Success from './src/pages/Success';
 
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
 
+
 function App(): JSX.Element {
   const Stack = createNativeStackNavigator();
   let persistor = persistStore(store);
+
+  const { handleURLCallback } = useStripe();
+
+  const handleDeepLink = useCallback(
+    async (url: string | null) => {
+      if (url) {
+        const stripeHandled = await handleURLCallback(url);
+        if (stripeHandled) {
+          // This was a Stripe URL - you can return or add extra handling here as you see fit
+        } else {
+          // This was NOT a Stripe URL – handle as you normally would
+        }
+      }
+    },
+    [handleURLCallback]
+  );
+
+  useEffect(() => {
+    const getUrlAsync = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      handleDeepLink(initialUrl);
+    };
+
+    getUrlAsync();
+
+    const deepLinkListener = Linking.addEventListener(
+      'url',
+      (event: { url: string }) => {
+        handleDeepLink(event.url);
+      }
+    );
+
+    return () => deepLinkListener.remove();
+  }, [handleDeepLink]);
 
   return (
     <Provider store={store}>
@@ -61,7 +83,7 @@ function App(): JSX.Element {
             <Stack.Screen name="Checkout" component={Checkout} />
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="Register" component={Register} />
-
+            <Stack.Screen name="Success" component={Success} />
           </Stack.Navigator>
           <StickyFooter />
         </NavigationContainer>

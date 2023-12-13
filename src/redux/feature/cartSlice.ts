@@ -82,7 +82,7 @@ export const cartSlice = createSlice({
       );
       return newState;
     },
-    emptyCart: (state, action: PayloadAction<number>) => {
+    emptyCart: (state) => {
       return initialState;
     },
   },
@@ -108,6 +108,6 @@ const deleteProductCB = (state: ICart, productId: number, size: string) => {
 };
 
 // Action creators are generated for each case reducer function
-export const {addProduct, updateQuantity, deleteProduct} = cartSlice.actions;
+export const {addProduct, updateQuantity, deleteProduct, emptyCart} = cartSlice.actions;
 
 export default cartSlice.reducer;
